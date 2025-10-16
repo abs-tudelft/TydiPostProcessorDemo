@@ -46,3 +46,7 @@ build/
 
 ### Scala ###
 .bsp/
+
+### Chisel ###
+test_run_dir
+*.fir
