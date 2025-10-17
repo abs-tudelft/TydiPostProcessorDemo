@@ -53,17 +53,21 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
       val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
       val dataStreams = postStream.asList
 
-      val passedData = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).map {
-        case (in, out, stream) => stream.map(bin => {
+      val passedData = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
+        case (in, out, stream, streamName) => stream.map(bin => {
           in.enqueueNow(bin.data.U)
           val output = out.bits.peek()
+          val isComment = streamName == "post_comments"
           c.clock.step()
           TydiBinary(output.litValue, out.bits.getWidth)
         })
       }.toList
 
-      postStream.posts.zip(passedData(0)).foreach { case (p, o) =>
-        assert(p.data == o.data)
+      // Verify that the output data is the same as the input data
+      postStream.asList.lazyZip(passedData).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>
+        inStream.zip(outStream).zipWithIndex.foreach { case ((p, o), i) =>
+          assert(p.data == o.data, s"Unequal data at index $i in stream $name: ${p.data} != ${o.data}")
+        }
       }
 
       val outStream = PhysicalStreamsBinary(passedData(0), passedData(1), passedData(2), passedData(3), passedData(4), passedData(5), passedData(6), passedData(7))
