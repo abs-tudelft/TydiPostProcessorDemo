@@ -13,4 +13,6 @@ class PostTydiPhysicalBundle extends Bundle{
   val post_comments: PhysicalStream = PhysicalStream(new CommentsStreamGroup, 1, 1, 1)
   val post_comment_author_username: PhysicalStream = PhysicalStream(char, 1, 1, 1)
   val post_comment_content: PhysicalStream = PhysicalStream(char, 1, 1, 1)
+
+  val asList: Seq[PhysicalStream] = elements.values.asInstanceOf[Iterable[PhysicalStream]].toSeq.reverse
 }

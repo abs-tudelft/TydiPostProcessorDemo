@@ -102,6 +102,10 @@ object PostTestUtils {
         post_comment_content = TydiStream.fromBinaryBlobs(post_comment_content, 3),
       )
     }
+
+    val asList: List[TydiBinaryStream] = {
+      this.productIterator.toList.asInstanceOf[List[TydiBinaryStream]]
+    }
   }
 
   object PhysicalStreamsBinary {
@@ -137,7 +141,7 @@ object PostTestUtils {
    *
    * @param posts The list of `Post` objects to print.
    */
-  def printPosts(posts: List[Post]): Unit = {
+  def printPosts(posts: Seq[Post]): Unit = {
     println("Successfully parsed and processed the JSON data:")
     posts.foreach(post => {
       println(s"Post ID: ${post.postId}, Title: ${post.title}, Likes: ${post.likes}")
@@ -155,7 +159,7 @@ object PostTestUtils {
 
   private val filename = "posts.json"
 
-  def getPosts: List[Post] = {
+  def getPosts: Seq[Post] = {
     // Read the JSON file and then parse the content.
     // The result is an `Either[io.circe.Error, List[Post]]`.
     val parsedPosts: Either[io.circe.Error, List[Post]] = for {
