@@ -1,7 +1,7 @@
 package nl.tudelft.post_processor
 
-import nl.tudelft.tydi_chisel._
 import chisel3._
+import nl.tudelft.tydi_chisel._
 
 class StringStream(c: Int, d: Int, n: Int, r: Boolean) extends PhysicalStreamDetailed(BitsEl(8.W), n, d, c, r)
 
