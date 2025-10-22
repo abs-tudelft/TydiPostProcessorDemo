@@ -9,6 +9,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import PostTestUtils._
 
 import chisel3.util.DecoupledIO
+import nl.tudelft.tydi_chisel.BitsEl
 
 class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "passthrough"
@@ -38,6 +39,33 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
       // val postDebinarizer = FromTydiBinary.gen[Post]
       val reconstructed = TydiStream.fromBinaryBlobs[Post](passedLiterals, 1)
       printPosts(reconstructed.toSeq.toList)
+    }
+  }
+
+  it should "pass through higher dimensions" in {
+    val globalWidth = 16
+
+    test(new TydiPassthroughModule(new BitsEl(8.W), 3, globalWidth.W)) { c =>
+      c.in.initSource()
+      c.out.initSink()
+
+      val postStream = PostTestUtils.getPhysicalStreamsBinary
+      c.out.ready.poke(true.B)
+
+      val passedData = postStream.post_tags.map( p => {
+        c.in.enqueueNow(p.data.U)
+        val output = c.out.bits.peek()
+        c.clock.step()
+        output
+      })
+
+      postStream.post_tags.zip(passedData).foreach { case (p, o) =>
+        assert(p.data == o.litValue)
+      }
+
+      val passedLiterals = passedData.map(v => TydiBinary(v.litValue, globalWidth))
+      val reconstructed = TydiStream.fromBinaryBlobs[Char](passedLiterals, 3).unpackToStrings().unpackDim()
+      println(reconstructed.toSeq)
     }
   }
 

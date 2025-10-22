@@ -12,7 +12,7 @@ class Axi2TydiSingleLane(sourceWidth: Width, sink: PhysicalStream) extends TydiM
   output.valid := input.valid
   output.strb := input.bits(0)
   output.last := input.bits(sink.d, 1)
-  output.data := input.bits(sink.getWidth + sink.d, sink.d + 1)
+  output.data := input.bits(sink.elWidth + sink.d, sink.d + 1)
   output.user := DontCare
   output.stai := 0.U
   output.endi := 0.U
