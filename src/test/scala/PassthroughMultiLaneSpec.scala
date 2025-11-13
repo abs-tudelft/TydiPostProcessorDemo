@@ -5,7 +5,6 @@ import PostTestUtils._
 import TydiPackaging.FromTydiBinary._
 import TydiPackaging.{TydiBinary, TydiStream}
 import chisel3._
-import chisel3.experimental.VecLiterals._
 import chiseltest._
 import nl.tudelft.tydi_chisel.BitsEl
 import org.scalatest.flatspec.AnyFlatSpec
@@ -22,13 +21,13 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       c.in.initSource()
       c.out.initSink()
 
-      val postStream = PostTestUtils.getPhysicalStreamsBinary
+      val tagsStream = PostTestUtils.getPhysicalStreamsBinary.post_tags
       c.out.ready.poke(true.B)
 
-      val inputData = postStream.post_tags.grouped(4).map(packets => {
-        val mapped = packets.zipWithIndex.map(p => (p._2 -> p._1.data.U))
-        val vecLit = Vec[UInt](n, UInt(globalWidth.W)).Lit(mapped: _*)
-        vecLit.asUInt
+      val inputData = tagsStream.grouped(4).map(packets => {
+        // Align packet width to AXI width and concatenate packets into a single literal
+        val lit = packets.map(p => TydiBinary(p.data, globalWidth)).reduce(_.concat(_))
+        lit.data.U
       }).toSeq
 
       val passedData = inputData.map(packets => {
@@ -38,12 +37,25 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         output
       })
 
-      postStream.post_tags.zip(passedData).foreach { case (p, o) =>
-        assert(p.data == o.litValue)
+      /*inputData.zip(passedData).foreach { case (p, o) =>
+        assert(p.litValue == o.litValue)
+      }*/
+
+      val passedLiterals = passedData.map(v => TydiBinary(v.litValue, n*globalWidth))
+      val passedPackets = passedLiterals.flatMap(lit => {
+        // Split literal into n packets, each with width globalWidth
+        val (packets, _) = (0 until n).foldLeft(List.empty[TydiBinary], lit) { case ((s, binary), i) =>
+          val (el, remainder) = binary.splitLow(globalWidth)
+          (el :: s, remainder)
+        }
+        packets.reverse
+      })
+
+      tagsStream.zip(passedPackets).foreach { case (p, o) =>
+        assert(p.data == o.data)
       }
 
-      val passedLiterals = passedData.map(v => TydiBinary(v.litValue, globalWidth))
-      val reconstructed = TydiStream.fromBinaryBlobs[Char](passedLiterals, 3).unpackToStrings().unpackDim()
+      val reconstructed = TydiStream.fromBinaryBlobs[Char](passedPackets, 3).unpackToStrings().unpackDim()
       println(reconstructed.toSeq)
     }
   }
