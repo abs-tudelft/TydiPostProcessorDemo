@@ -17,7 +17,7 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
   it should "pass through and reconstruct" in {
     val globalWidth = 264
 
-    test(new TydiPassthroughModule(new PostStreamGroup(), 1, globalWidth.W)) { c =>
+    test(new TydiPassthroughSingleLane(new PostStreamGroup(), 1, globalWidth.W)) { c =>
       c.in.initSource()
       c.out.initSink()
 
@@ -45,7 +45,7 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
   it should "pass through higher dimensions" in {
     val globalWidth = 16
 
-    test(new TydiPassthroughModule(new BitsEl(8.W), 3, globalWidth.W)) { c =>
+    test(new TydiPassthroughSingleLane(new BitsEl(8.W), 3, globalWidth.W)) { c =>
       c.in.initSource()
       c.out.initSink()
 
@@ -70,7 +70,7 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "pass through all streams" in {
-    test(new PostPassthroughModule) { c =>
+    test(new PostPassthroughSingleLane) { c =>
       // Initialize input and output streams
       c.in.asList.foreach(_.initSource())
       c.out.asList.foreach(s => {
