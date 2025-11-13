@@ -25,8 +25,8 @@ class Axi2TydiMultiLane(sourceWidth: Int, sink: PhysicalStream) extends TydiModu
   output.valid := input.valid
 
   inputVec.lazyZip(outputDataVec).lazyZip(outputLastVec).lazyZip(outputStrbVec).foreach { case (in, outData, outLast, outStrb) =>
-    outStrb := input.bits(0)
-    outLast := input.bits(sink.d, 1)
+    outStrb := in(0)
+    outLast := in(sink.d, 1)
     outData := in(sink.elWidth + sink.d, sink.d + 1)
   }
 
