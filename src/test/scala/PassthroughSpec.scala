@@ -1,6 +1,6 @@
 package nl.tudelft.post_processor
 
-import TydiPackaging.{FromTydiBinary, TydiBinary, TydiStream}
+import TydiPackaging.{FromTydiBinary, TydiBinary, TydiBinaryStream, TydiStream}
 import TydiPackaging.FromTydiBinary._
 import TydiPackaging.CustomBinaryConversions._
 import chisel3._
@@ -31,11 +31,11 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
         output
       })
 
-      postStream.posts.zip(passedData).foreach { case (p, o) =>
+      postStream.posts.packets.zip(passedData).foreach { case (p, o) =>
         assert(p.data == o.litValue)
       }
 
-      val passedLiterals = passedData.map(v => TydiBinary(v.litValue, globalWidth))
+      val passedLiterals = TydiBinaryStream(passedData.map(v => TydiBinary(v.litValue, globalWidth)))
       // val postDebinarizer = FromTydiBinary.gen[Post]
       val reconstructed = TydiStream.fromBinaryBlobs[Post](passedLiterals, 1)
       printPosts(reconstructed.toSeq.toList)
@@ -59,11 +59,11 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
         output
       })
 
-      postStream.post_tags.zip(passedData).foreach { case (p, o) =>
+      postStream.post_tags.packets.zip(passedData).foreach { case (p, o) =>
         assert(p.data == o.litValue)
       }
 
-      val passedLiterals = passedData.map(v => TydiBinary(v.litValue, globalWidth))
+      val passedLiterals = TydiBinaryStream(passedData.map(v => TydiBinary(v.litValue, globalWidth)))
       val reconstructed = TydiStream.fromBinaryBlobs[Char](passedLiterals, 3).unpackToStrings().unpackDim()
       println(reconstructed.toSeq)
     }
@@ -82,13 +82,15 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
       val dataStreams = postStream.asList
 
       val passedData = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
-        case (in, out, stream, streamName) => stream.map(bin => {
-          in.enqueueNow(bin.data.U)
-          val output = out.bits.peek()
-          val isComment = streamName == "post_comments"
-          c.clock.step()
-          TydiBinary(output.litValue, out.bits.getWidth)
-        })
+        case (in, out, stream, streamName) => TydiBinaryStream(
+          stream.map(bin => {
+            in.enqueueNow(bin.data.U)
+            val output = out.bits.peek()
+            val isComment = streamName == "post_comments"
+            c.clock.step()
+            TydiBinary(output.litValue, out.bits.getWidth)
+          })
+        )
       }.toList
 
       // Verify that the output data is the same as the input data

@@ -3,7 +3,7 @@ package nl.tudelft.post_processor
 import PostTestUtils._
 
 import TydiPackaging.FromTydiBinary._
-import TydiPackaging.{TydiBinary, TydiStream, TydiPacket}
+import TydiPackaging.{TydiBinary, TydiBinaryStream, TydiPacket, TydiStream}
 import chisel3._
 import chiseltest._
 import nl.tudelft.tydi_chisel.BitsEl
@@ -29,11 +29,11 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         output
       })
 
-      postStream.post_tags.zip(passedData).foreach { case (p, o) =>
+      postStream.post_tags.packets.zip(passedData).foreach { case (p, o) =>
         assert(p.data == o.litValue)
       }
 
-      val passedLiterals = passedData.map(v => TydiBinary(v.litValue, globalWidth))
+      val passedLiterals = TydiBinaryStream(passedData.map(v => TydiBinary(v.litValue, globalWidth)))
       val reconstructed = TydiStream.fromBinaryBlobs[Char](passedLiterals, 3).unpackToStrings().unpackDim()
       println(reconstructed.toSeq)
     }
@@ -48,37 +48,22 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       c.in.initSource()
       c.out.initSink()
 
-      val tagsStream = PostTestUtils.getPhysicalStreamsBinary.post_tags
+      val tagsStream: TydiBinaryStream = PostTestUtils.getPhysicalStreamsBinary.post_tags
       c.out.ready.poke(true.B)
 
-      val inputData = tagsStream.grouped(n).map(packets => {
-        // Align packet width to AXI width and concatenate packets into a single literal
-        val lit = packets.map(p => TydiBinary(p.data, globalWidth)).reduce(_.concat(_))
-        lit.data.U
-      }).toSeq
+      val inputData = tagsStream.group(n, globalWidth)
 
       val passedData = inputData.map(packets => {
-        c.in.enqueueNow(packets)
+        c.in.enqueueNow(packets.data.U)
         val output = c.out.bits.peek()
         c.clock.step()
         output
       })
 
-      /*inputData.zip(passedData).foreach { case (p, o) =>
-        assert(p.litValue == o.litValue)
-      }*/
-
       val passedLiterals = passedData.map(v => TydiBinary(v.litValue, n*globalWidth))
-      val passedPackets = passedLiterals.flatMap(lit => {
-        // Split literal into n packets, each with width globalWidth
-        val (packets, _) = (0 until n).foldLeft(List.empty[TydiBinary], lit) { case ((s, binary), i) =>
-          val (el, remainder) = binary.splitLow(globalWidth)
-          (el :: s, remainder)
-        }
-        packets.reverse
-      })
+      val passedPackets = TydiBinaryStream.fromGrouped(passedLiterals, n)
 
-      tagsStream.zip(passedPackets).foreach { case (p, o) =>
+      tagsStream.packets.zip(passedPackets.packets).foreach { case (p, o) =>
         assert(p.data == o.data)
       }
 
@@ -109,30 +94,18 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         TydiPacket(Some(5.toShort), Seq(false, true, false)),
         TydiPacket(Some(6.toShort), Seq(true, false, false)),
       )
-      val inputBinaryPackets = TydiStream(inputPackets).toBinaryBlobs()
+      val inputBinaryPackets: TydiBinaryStream = TydiStream(inputPackets).toBinaryBlobs
+      val inputGroupedPackets: TydiBinaryStream = inputBinaryPackets.group(n, globalWidth)
 
-      val inputData = inputBinaryPackets.grouped(n).map(packets => {
-        // Align packet width to AXI width and concatenate packets into a single literal
-        val lit = packets.map(p => TydiBinary(p.data, globalWidth)).reduce(_.concat(_))
-        lit.data.U
-      }).toSeq
-
-      val passedData = inputData.map(packets => {
-        c.in.enqueueNow(packets)
+      val passedData = inputGroupedPackets.map(packets => {
+        c.in.enqueueNow(packets.data.U)
         val output = c.out.bits.peek()
         c.clock.step()
         output
       })
 
       val passedLiterals = passedData.map(v => TydiBinary(v.litValue, n*globalWidth))
-      val passedPackets = passedLiterals.flatMap(lit => {
-        // Split literal into n packets, each with width globalWidth
-        val (packets, _) = (0 until n).foldLeft(List.empty[TydiBinary], lit) { case ((s, binary), i) =>
-          val (el, remainder) = binary.splitLow(globalWidth)
-          (el :: s, remainder)
-        }
-        packets.reverse
-      })
+      val passedPackets = TydiBinaryStream.fromGrouped(passedLiterals, n)
 
       inputBinaryPackets.zip(passedPackets).foreach { case (p, o) =>
         assert(p.data == o.data)

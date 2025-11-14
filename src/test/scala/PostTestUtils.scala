@@ -1,6 +1,6 @@
 package nl.tudelft.post_processor
 
-import TydiPackaging.{TydiBinary, TydiStream}
+import TydiPackaging.{TydiBinary, TydiBinaryStream, TydiStream}
 import io.circe.generic.auto._
 import io.circe.parser._
 
@@ -77,8 +77,6 @@ object PostTestUtils {
       )
     }
   }
-
-  type TydiBinaryStream = Seq[TydiBinary]
 
   case class PhysicalStreamsBinary(
                                     posts: TydiBinaryStream,
