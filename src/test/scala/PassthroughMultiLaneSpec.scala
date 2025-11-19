@@ -138,7 +138,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
       val dataStreams = postStream.asList
 
-      val passedData = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
+      val dataOutRaw = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
         case (in, out, stream, streamName) => TydiBinaryStream({
           val n = laneCounts(streamName)
           val blobWidth = in.bits.getWidth/n
@@ -151,14 +151,16 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         })
       }.toList
 
+      val dataOut = dataOutRaw.zip(postStream.names).map { case (stream, name) => stream.ungroup(laneCounts(name)) }
+
       // Verify that the output data is the same as the input data
-      postStream.asList.lazyZip(passedData).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>
+      postStream.asList.lazyZip(dataOut).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>
         inStream.zip(outStream).zipWithIndex.foreach { case ((p, o), i) =>
           assert(p.data == o.data, s"Unequal data at index $i in stream $name: ${p.data} != ${o.data}")
         }
       }
 
-      val outStream = PhysicalStreamsBinary(passedData(0), passedData(1), passedData(2), passedData(3), passedData(4), passedData(5), passedData(6), passedData(7))
+      val outStream = PhysicalStreamsBinary(dataOut(0), dataOut(1), dataOut(2), dataOut(3), dataOut(4), dataOut(5), dataOut(6), dataOut(7))
       val reconstructed1 = outStream.reverse()
       val reconstructed2 = reconstructed1.reverse()
       printPosts(reconstructed2)
