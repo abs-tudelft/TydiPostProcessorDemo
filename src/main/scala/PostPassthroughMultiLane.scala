@@ -3,17 +3,19 @@ package nl.tudelft.post_processor
 import chisel3._
 import nl.tudelft.tydi_chisel.{TydiEl, TydiModule}
 
-class PostPassthroughMultiLane extends TydiModule {
-  val in: PostAxiBundle = IO(Flipped(new PostAxiBundle))
-  val out: PostAxiBundle = IO(new PostAxiBundle)
+import scala.collection.immutable.SeqMap
+
+class PostPassthroughMultiLane(laneCounts: SeqMap[String, Int]) extends TydiModule {
+  val in: PostAxiBundle = IO(Flipped(new PostAxiBundle(laneCounts)))
+  val out: PostAxiBundle = IO(new PostAxiBundle(laneCounts))
 
   private val physicalStreams = new PostTydiPhysicalBundle
 
-  private val passthroughs: Seq[TydiPassthroughMultiLane[TydiEl]] = in.asList.zip(physicalStreams.asList).map { case (axi, tydi) =>
-    // Use multiple lanes for string streams, otherwise use a single lane
-    val n = if (tydi.elWidth == 8) { 4 } else { 1 }
-    Module(new TydiPassthroughMultiLane(tydi.elementType, tydi.d, n, axi.bits.getWidth))
-  }.toSeq
+  private val laneCountValues = laneCounts.values.toSeq
+
+  private val passthroughs: Seq[TydiPassthroughMultiLane[TydiEl]] = in.asList.lazyZip(physicalStreams.asList).lazyZip(laneCountValues).map { case (axi, tydi, n) =>
+    Module(new TydiPassthroughMultiLane(tydi.elementType, tydi.d, n, axi.bits.getWidth/n))
+  }
 
   in.asList.zip(passthroughs).foreach { case (io, module) =>
     module.in <> io

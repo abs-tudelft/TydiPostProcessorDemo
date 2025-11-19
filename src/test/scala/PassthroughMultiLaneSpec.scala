@@ -9,6 +9,8 @@ import chiseltest._
 import nl.tudelft.tydi_chisel.BitsEl
 import org.scalatest.flatspec.AnyFlatSpec
 
+import scala.collection.immutable.SeqMap
+
 class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "passthrough"
 
@@ -80,7 +82,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
     val n = 3
     val d = 3
 
-    test(new TydiPassthroughMultiLane(new BitsEl(8.W), d, n, globalWidth)) { c =>
+    test(new TydiPassthroughMultiLane(new BitsEl(16.W), d, n, globalWidth)) { c =>
       c.in.initSource()
       c.out.initSink()
 
@@ -110,6 +112,56 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       inputBinaryPackets.zip(passedPackets).foreach { case (p, o) =>
         assert(p.data == o.data)
       }
+    }
+  }
+
+  it should "pass through all streams" in {
+    val laneCounts = SeqMap(
+      "posts" -> 1,
+      "post_titles" -> 4,
+      "post_contents" -> 4,
+      "post_author_username" -> 4,
+      "post_tags" -> 4,
+      "post_comments" -> 1,
+      "post_comment_author_username" -> 4,
+      "post_comment_content" -> 4,
+    )
+
+    test(new PostPassthroughMultiLane(laneCounts)) { c =>
+      // Initialize input and output streams
+      c.in.asList.foreach(_.initSource())
+      c.out.asList.foreach(s => {
+        s.initSink()
+        s.ready.poke(true.B)
+      })
+
+      val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
+      val dataStreams = postStream.asList
+
+      val passedData = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
+        case (in, out, stream, streamName) => TydiBinaryStream({
+          val n = laneCounts(streamName)
+          val blobWidth = in.bits.getWidth/n
+          stream.group(n, blobWidth).map(bin => {
+            in.enqueueNow(bin.data.U)
+            val output = out.bits.peek()
+            c.clock.step()
+            TydiBinary(output.litValue, out.bits.getWidth)
+          })
+        })
+      }.toList
+
+      // Verify that the output data is the same as the input data
+      postStream.asList.lazyZip(passedData).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>
+        inStream.zip(outStream).zipWithIndex.foreach { case ((p, o), i) =>
+          assert(p.data == o.data, s"Unequal data at index $i in stream $name: ${p.data} != ${o.data}")
+        }
+      }
+
+      val outStream = PhysicalStreamsBinary(passedData(0), passedData(1), passedData(2), passedData(3), passedData(4), passedData(5), passedData(6), passedData(7))
+      val reconstructed1 = outStream.reverse()
+      val reconstructed2 = reconstructed1.reverse()
+      printPosts(reconstructed2)
     }
   }
 }

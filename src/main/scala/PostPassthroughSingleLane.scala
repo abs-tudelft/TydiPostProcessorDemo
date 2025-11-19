@@ -4,9 +4,22 @@ import chisel3._
 import chisel3.util.DecoupledIO
 import nl.tudelft.tydi_chisel.{BitsEl, PhysicalStream, TydiEl, TydiModule}
 
+import scala.collection.immutable.SeqMap
+
 class PostPassthroughSingleLane extends TydiModule {
-  val in: PostAxiBundle = IO(Flipped(new PostAxiBundle))
-  val out: PostAxiBundle = IO(new PostAxiBundle)
+  private val laneCounts = SeqMap(
+    "posts" -> 1,
+    "post_titles" -> 1,
+    "post_contents" -> 1,
+    "post_author_username" -> 1,
+    "post_tags" -> 1,
+    "post_comments" -> 1,
+    "post_comment_author_username" -> 1,
+    "post_comment_content" -> 1,
+  )
+
+  val in: PostAxiBundle = IO(Flipped(new PostAxiBundle(laneCounts)))
+  val out: PostAxiBundle = IO(new PostAxiBundle(laneCounts))
 
   private val physicalStreams = new PostTydiPhysicalBundle
 
