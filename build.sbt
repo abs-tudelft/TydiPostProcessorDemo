@@ -11,6 +11,6 @@ libraryDependencies += "nl.tudelft" %% "tydi-packaging" % "0.1.0-SNAPSHOT" % Tes
 
 lazy val root = (project in file("."))
   .settings(
-    name := "PostProcessor",
+    name := "TydiPostProcessorDemo",
     idePackagePrefix := Some("nl.tudelft.post_processor")
   )
