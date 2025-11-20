@@ -5,27 +5,24 @@ import PostTestUtils._
 import TydiPackaging.FromTydiBinary._
 import TydiPackaging.{TydiBinary, TydiBinaryStream, TydiPacket, TydiStream}
 import chisel3._
-import chiseltest._
+import chisel3.simulator.scalatest.ChiselSim
 import nl.tudelft.tydi_chisel.BitsEl
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.collection.immutable.SeqMap
 
-class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
+class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselSim {
   behavior of "passthrough"
 
   it should "pass through tags for n=1" in {
     val globalWidth = 16
 
-    test(new TydiPassthroughMultiLane(new BitsEl(8.W), 3, 1, globalWidth)) { c =>
-      c.in.initSource()
-      c.out.initSink()
-
+    simulate(new TydiPassthroughMultiLane(new BitsEl(8.W), 3, 1, globalWidth)) { c =>
       val postStream = PostTestUtils.getPhysicalStreamsBinary
       c.out.ready.poke(true.B)
 
       val passedData = postStream.post_tags.map( p => {
-        c.in.enqueueNow(p.data.U)
+        c.in.bits.poke(p.data.U)
         val output = c.out.bits.peek()
         c.clock.step()
         output
@@ -46,17 +43,14 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
     val n = 4
     val d = 3
 
-    test(new TydiPassthroughMultiLane(new BitsEl(8.W), d, n, globalWidth)) { c =>
-      c.in.initSource()
-      c.out.initSink()
-
+    simulate(new TydiPassthroughMultiLane(new BitsEl(8.W), d, n, globalWidth)) { c =>
       val tagsStream: TydiBinaryStream = PostTestUtils.getPhysicalStreamsBinary.post_tags
       c.out.ready.poke(true.B)
 
       val inputData = tagsStream.group(n, globalWidth)
 
       val passedData = inputData.map(packets => {
-        c.in.enqueueNow(packets.data.U)
+        c.in.bits.poke(packets.data.U)
         val output = c.out.bits.peek()
         c.clock.step()
         output
@@ -82,10 +76,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
     val n = 3
     val d = 3
 
-    test(new TydiPassthroughMultiLane(new BitsEl(16.W), d, n, globalWidth)) { c =>
-      c.in.initSource()
-      c.out.initSink()
-
+    simulate(new TydiPassthroughMultiLane(new BitsEl(16.W), d, n, globalWidth)) { c =>
       c.out.ready.poke(true.B)
 
       val inputPackets = Seq(
@@ -100,7 +91,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       val inputGroupedPackets: TydiBinaryStream = inputBinaryPackets.group(n, globalWidth)
 
       val passedData = inputGroupedPackets.map(packets => {
-        c.in.enqueueNow(packets.data.U)
+        c.in.bits.poke(packets.data.U)
         val output = c.out.bits.peek()
         c.clock.step()
         output
@@ -127,11 +118,10 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       "post_comment_content" -> 4,
     )
 
-    test(new PostPassthroughMultiLane(laneCounts)) { c =>
+    simulate(new PostPassthroughMultiLane(laneCounts)) { c =>
       // Initialize input and output streams
-      c.in.asList.foreach(_.initSource())
+      // c.in.asList.foreach(_.initSource())
       c.out.asList.foreach(s => {
-        s.initSink()
         s.ready.poke(true.B)
       })
 
@@ -143,7 +133,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
           val n = laneCounts(streamName)
           val blobWidth = in.bits.getWidth/n
           stream.group(n, blobWidth).map(bin => {
-            in.enqueueNow(bin.data.U)
+            in.bits.poke(bin.data.U)
             val output = out.bits.peek()
             c.clock.step()
             TydiBinary(output.litValue, out.bits.getWidth)

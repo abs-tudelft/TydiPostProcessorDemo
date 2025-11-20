@@ -4,28 +4,25 @@ import TydiPackaging.{FromTydiBinary, TydiBinary, TydiBinaryStream, TydiStream}
 import TydiPackaging.FromTydiBinary._
 import TydiPackaging.CustomBinaryConversions._
 import chisel3._
-import chiseltest._
+import chisel3.simulator.scalatest.ChiselSim
 import org.scalatest.flatspec.AnyFlatSpec
 import PostTestUtils._
 
-import chisel3.util.DecoupledIO
 import nl.tudelft.tydi_chisel.BitsEl
 
-class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
+class PassthroughSpec extends AnyFlatSpec with ChiselSim {
   behavior of "passthrough"
 
   it should "pass through and reconstruct" in {
     val globalWidth = 264
 
-    test(new TydiPassthroughSingleLane(new PostStreamGroup(), 1, globalWidth.W)) { c =>
-      c.in.initSource()
-      c.out.initSink()
-
+    simulate(new TydiPassthroughSingleLane(new PostStreamGroup(), 1, globalWidth.W)) { c =>
       val postStream = PostTestUtils.getPhysicalStreamsBinary
       c.out.ready.poke(true.B)
 
       val passedData = postStream.posts.map( p => {
-        c.in.enqueueNow(p.data.U)
+        c.in.bits(p.data.U)
+        c.in.valid.poke(true.B)
         val output = c.out.bits.peek()
         c.clock.step()
         output
@@ -45,15 +42,13 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
   it should "pass through higher dimensions" in {
     val globalWidth = 16
 
-    test(new TydiPassthroughSingleLane(new BitsEl(8.W), 3, globalWidth.W)) { c =>
-      c.in.initSource()
-      c.out.initSink()
-
+    simulate(new TydiPassthroughSingleLane(new BitsEl(8.W), 3, globalWidth.W)) { c =>
       val postStream = PostTestUtils.getPhysicalStreamsBinary
       c.out.ready.poke(true.B)
 
       val passedData = postStream.post_tags.map( p => {
-        c.in.enqueueNow(p.data.U)
+        c.in.bits.poke(p.data.U)
+        c.in.valid.poke(true.B)
         val output = c.out.bits.peek()
         c.clock.step()
         output
@@ -70,11 +65,10 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "pass through all streams" in {
-    test(new PostPassthroughSingleLane) { c =>
+    simulate(new PostPassthroughSingleLane) { c =>
       // Initialize input and output streams
-      c.in.asList.foreach(_.initSource())
+      // c.in.asList.foreach()
       c.out.asList.foreach(s => {
-        s.initSink()
         s.ready.poke(true.B)
       })
 
@@ -84,7 +78,7 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
       val passedData = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
         case (in, out, stream, streamName) => TydiBinaryStream(
           stream.map(bin => {
-            in.enqueueNow(bin.data.U)
+            in.bits.poke(bin.data.U)
             val output = out.bits.peek()
             val isComment = streamName == "post_comments"
             c.clock.step()
