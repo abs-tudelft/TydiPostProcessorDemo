@@ -166,4 +166,56 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       printPosts(reconstructed2)
     }
   }
+
+  it should "use the test hardness" in {
+    val laneCounts = SeqMap(
+      "posts" -> 1,
+      "post_titles" -> 4,
+      "post_contents" -> 4,
+      "post_author_username" -> 4,
+      "post_tags" -> 4,
+      "post_comments" -> 1,
+      "post_comment_author_username" -> 4,
+      "post_comment_content" -> 4,
+    )
+
+    test(new TestHarness(laneCounts)) { c =>
+      val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
+      val dataStreams = postStream.asList
+      val streamLengths = postStream.asTuplesWithNames.map { case (name, stream) =>
+        stream.packets.length / laneCounts(name)
+      }
+      val maxLength = streamLengths.max
+
+      // All data will flow from the ROM automatically, we just need to wait until the last packet is sent.
+      step(maxLength)
+
+      /*while (c.lengths(0).peek().litValue < postStream.posts.packets.length) {
+        step(1)
+      }*/
+
+      val dataOutRaw: List[TydiBinaryStream] = c.output.map(out => {
+        TydiBinaryStream({
+          val output: Vec[UInt] = out.peek
+          output.map(v =>
+            TydiBinary(v.litValue, v.getWidth)
+          )
+        })
+      }).toList
+
+      val dataOut = dataOutRaw.zip(postStream.names).map { case (stream, name) => stream.ungroup(laneCounts(name)) }
+
+      // Verify that the output data is the same as the input data
+      postStream.asList.lazyZip(dataOut).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>
+        inStream.zip(outStream).zipWithIndex.foreach { case ((p, o), i) =>
+          assert(p.data == o.data, s"Unequal data at index $i in stream $name: ${p.data} != ${o.data}")
+        }
+      }
+
+      val outStream = PhysicalStreamsBinary(dataOut(0), dataOut(1), dataOut(2), dataOut(3), dataOut(4), dataOut(5), dataOut(6), dataOut(7))
+      val reconstructed1 = outStream.reverse()
+      val reconstructed2 = reconstructed1.reverse()
+      printPosts(reconstructed2)
+    }
+  }
 }

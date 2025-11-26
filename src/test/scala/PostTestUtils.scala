@@ -106,6 +106,8 @@ object PostTestUtils {
     }
 
     val names: List[String] = List("posts", "post_titles", "post_contents", "post_author_username", "post_tags", "post_comments", "post_comment_author_username", "post_comment_content")
+
+    val asTuplesWithNames: List[(String, TydiBinaryStream)] = names.zip(asList)
   }
 
   object PhysicalStreamsBinary {
