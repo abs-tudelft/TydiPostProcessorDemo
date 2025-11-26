@@ -20,9 +20,9 @@ class TestHarness(laneCounts: SeqMap[String, Int]) extends Module {
   }
   inputRoms.map(_.output).zip(passthroughModule.in.asList).foreach{ case (rom, axi) => axi <> rom }
 
-  private val outputMems = postStream.asList.lazyZip(postStream.names).lazyZip(passthroughModule.in.asList).map { case (stream, name, axi) =>
-    val capacity = stream.packets.length
+  private val outputMems = postStream.asList.lazyZip(postStream.names).lazyZip(passthroughModule.out.asList).map { case (stream, name, axi) =>
     val laneCount = laneCounts(name)
+    val capacity = math.ceil(stream.packets.length.toDouble/laneCount).toInt
     val blobWidth = axi.bits.getWidth
     Module(new AxiSinkMem(capacity, blobWidth.W))
   }
