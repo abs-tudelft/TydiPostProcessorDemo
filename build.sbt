@@ -7,7 +7,7 @@ addCompilerPlugin("org.chipsalliance" % "chisel-plugin" % chiselVersion cross Cr
 libraryDependencies += "org.chipsalliance" %% "chisel" % chiselVersion
 libraryDependencies += "nl.tudelft" %% "tydi-chisel" % "0.1.0"
 libraryDependencies += "nl.tudelft" %% "tydi-chisel-test" % "0.1.0" % Test
-libraryDependencies += "nl.tudelft" %% "tydi-packaging" % "0.1.0-SNAPSHOT" % Test
+libraryDependencies += "nl.tudelft" %% "tydi-payload-kit" % "0.1.0-SNAPSHOT" % Test
 
 lazy val root = (project in file("."))
   .settings(

@@ -1,6 +1,6 @@
 package nl.tudelft.post_processor
 
-import TydiPackaging.{TydiBinary, TydiBinaryStream, TydiStream}
+import TydiPayloadKit.{TydiBinary, TydiBinaryStream, TydiStream}
 import io.circe.generic.auto._
 import io.circe.parser._
 
@@ -8,7 +8,7 @@ import java.time.Instant
 import scala.io.Source
 import scala.util.Using
 // Even though the implicit conversion definitions are not actively used, they *need* to be imported to be available for the compiler.
-import TydiPackaging.CustomBinaryConversions._
+import TydiPayloadKit.CustomBinaryConversions._
 
 object PostTestUtils {
   // Case classes to represent the JSON data structure

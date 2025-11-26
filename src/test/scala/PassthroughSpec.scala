@@ -1,8 +1,8 @@
 package nl.tudelft.post_processor
 
-import TydiPackaging.{FromTydiBinary, TydiBinary, TydiBinaryStream, TydiStream}
-import TydiPackaging.FromTydiBinary._
-import TydiPackaging.CustomBinaryConversions._
+import TydiPayloadKit.{FromTydiBinary, TydiBinary, TydiBinaryStream, TydiStream}
+import TydiPayloadKit.FromTydiBinary._
+import TydiPayloadKit.CustomBinaryConversions._
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec

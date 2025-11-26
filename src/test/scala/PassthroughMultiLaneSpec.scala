@@ -2,8 +2,8 @@ package nl.tudelft.post_processor
 
 import PostTestUtils._
 
-import TydiPackaging.FromTydiBinary._
-import TydiPackaging.{TydiBinary, TydiBinaryStream, TydiPacket, TydiStream}
+import TydiPayloadKit.FromTydiBinary._
+import TydiPayloadKit.{TydiBinary, TydiBinaryStream, TydiPacket, TydiStream}
 import chisel3._
 import chiseltest._
 import nl.tudelft.tydi_chisel.BitsEl
