@@ -8,8 +8,9 @@ import chisel3.util.{Counter, DecoupledIO}
  * A simple memory that stores the last N elements of a TydiBinaryStream.
  * @param capacity The capacity of the memory in number of elements.
  * @param width The width of the AXI lane.
+ * @param streamName The name of the stream. Just for organizational purposes.
  */
-class AxiSinkMem(capacity: Int, width: Width) extends Module {
+class AxiSinkMem(capacity: Int, width: Width, val streamName: String) extends Module {
   private val mem: Vec[UInt] = RegInit(VecInit.fill(capacity)(0.U(width)))
   private val counter = Counter(mem.length)
 

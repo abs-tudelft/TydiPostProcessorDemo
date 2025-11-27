@@ -7,27 +7,22 @@ import PostTestUtils._
 
 import scala.collection.immutable.SeqMap
 
-class TestHarness[A <: Bundle, B <: Bundle](laneCounts: SeqMap[String, Int], module: => SimpleTypedIO[A, B]) extends Module {
+class TestHarness[A <: Bundle, B <: Bundle](module: => SimpleTypedIO[A, B], inStreams: SeqMap[String, TydiBinaryStream], outCapacities: SeqMap[String, Int]) extends Module {
   private val dut = Module(module)
-
-  private val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
 
   private val inList = dut.in.elements.values.asInstanceOf[Iterable[DecoupledIO[UInt]]].toSeq.reverse
   private val outList = dut.out.elements.values.asInstanceOf[Iterable[DecoupledIO[UInt]]].toSeq.reverse
 
-  private val inputRoms = postStream.asList.lazyZip(postStream.names).lazyZip(inList).map { case (stream, name, axi) =>
-    val laneCount = laneCounts(name)
-    val blobWidth = axi.bits.getWidth
-    val romStream = stream.group(laneCount, blobWidth/laneCount)
-    Module(new AxiSourceRom(romStream, blobWidth.W))
+  private val streams = inStreams.values.toSeq
+  private val names = inStreams.keys.toSeq
+
+  private val inputRoms = streams.lazyZip(names).lazyZip(inList).map { case (stream, name, axi) =>
+    Module(new AxiSourceRom(stream, axi.bits.getWidth.W, name))
   }
   inputRoms.map(_.output).zip(inList).foreach{ case (rom, axi) => axi <> rom }
 
-  private val outputMems = postStream.asList.lazyZip(postStream.names).lazyZip(outList).map { case (stream, name, axi) =>
-    val laneCount = laneCounts(name)
-    val capacity = math.ceil(stream.packets.length.toDouble/laneCount).toInt
-    val blobWidth = axi.bits.getWidth
-    Module(new AxiSinkMem(capacity, blobWidth.W))
+  private val outputMems = names.zip(outList).map { case (name, axi) =>
+    Module(new AxiSinkMem(outCapacities(name), axi.bits.getWidth.W, name))
   }
   outputMems.map(_.input).zip(outList).foreach{ case (mem, axi) => mem <> axi }
 

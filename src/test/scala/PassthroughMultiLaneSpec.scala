@@ -179,13 +179,23 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       "post_comment_content" -> 4,
     )
 
-    test(new TestHarness(laneCounts, new PostPassthroughMultiLane(laneCounts))) { c =>
-      val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
-      val dataStreams = postStream.asList
-      val streamLengths = postStream.asTuplesWithNames.map { case (name, stream) =>
-        stream.packets.length / laneCounts(name)
+    val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
+    val bundle = new PostAxiBundle(laneCounts)
+
+    // Create a map of input streams that have their packets grouped by lane count
+    val inputStreams: SeqMap[String, TydiBinaryStream] = SeqMap.from(
+      postStream.asList.lazyZip(postStream.names).lazyZip(bundle.asList).map { case (stream, name, axi) =>
+        val laneCount = laneCounts(name)
+        val blobWidth = axi.bits.getWidth
+        (name -> stream.group(laneCount, blobWidth / laneCount))
       }
-      val maxLength = streamLengths.max
+    )
+
+    // Calculate the output capacity of each stream
+    val outCapacity: SeqMap[String, Int] = inputStreams.map { case (name, stream) => (name -> stream.packets.length) }
+
+    test(new TestHarness(new PostPassthroughMultiLane(laneCounts), inputStreams, outCapacity)) { c =>
+      val maxLength = outCapacity.values.max
 
       // All data will flow from the ROM automatically, we just need to wait until the last packet is sent.
       step(maxLength)
