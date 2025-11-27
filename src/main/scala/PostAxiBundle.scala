@@ -5,7 +5,7 @@ import chisel3.util.DecoupledIO
 
 import scala.collection.SeqMap
 
-class PostAxiBundle(laneCounts: SeqMap[String, Int]) extends Bundle {
+class PostAxiBundle(laneCounts: SeqMap[String, Int]) extends Bundle with PostStreamsAsFields[DecoupledIO[UInt]] {
   private val charSize = 16 // Rounding up charSize+1+d
 
   val posts: DecoupledIO[UInt] = DecoupledIO(UInt((264 * laneCounts("posts")).W))
