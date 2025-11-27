@@ -179,7 +179,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       "post_comment_content" -> 4,
     )
 
-    test(new TestHarness(laneCounts)) { c =>
+    test(new TestHarness(laneCounts, new PostPassthroughMultiLane(laneCounts))) { c =>
       val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
       val dataStreams = postStream.asList
       val streamLengths = postStream.asTuplesWithNames.map { case (name, stream) =>

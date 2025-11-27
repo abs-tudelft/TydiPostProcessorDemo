@@ -5,7 +5,7 @@ import nl.tudelft.tydi_chisel.{TydiEl, TydiModule}
 
 import scala.collection.immutable.SeqMap
 
-class PostPassthroughMultiLane(laneCounts: SeqMap[String, Int]) extends TydiModule {
+class PostPassthroughMultiLane(laneCounts: SeqMap[String, Int]) extends TydiModule with SimpleTypedIO[PostAxiBundle, PostAxiBundle] {
   val in: PostAxiBundle = IO(Flipped(new PostAxiBundle(laneCounts)))
   val out: PostAxiBundle = IO(new PostAxiBundle(laneCounts))
 
