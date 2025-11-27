@@ -116,15 +116,15 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "pass through all streams" in {
-    val laneCounts = SeqMap(
-      "posts" -> 1,
-      "post_titles" -> 4,
-      "post_contents" -> 4,
-      "post_author_username" -> 4,
-      "post_tags" -> 4,
-      "post_comments" -> 1,
-      "post_comment_author_username" -> 4,
-      "post_comment_content" -> 4,
+    val laneCounts = PostStreamsSpecify(
+      posts = 1,
+      post_titles = 4,
+      post_contents = 4,
+      post_author_username = 4,
+      post_tags = 4,
+      post_comments = 1,
+      post_comment_author_username = 4,
+      post_comment_content = 4,
     )
 
     test(new PostPassthroughMultiLane(laneCounts)) { c =>
@@ -140,7 +140,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
 
       val dataOutRaw = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
         case (in, out, stream, streamName) => TydiBinaryStream({
-          val n = laneCounts(streamName)
+          val n = laneCounts.toMap(streamName)
           val blobWidth = in.bits.getWidth/n
           stream.group(n, blobWidth).map(bin => {
             in.enqueueNow(bin.data.U)
@@ -151,7 +151,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         })
       }.toList
 
-      val dataOut = dataOutRaw.zip(postStream.names).map { case (stream, name) => stream.ungroup(laneCounts(name)) }
+      val dataOut = dataOutRaw.zip(postStream.names).map { case (stream, name) => stream.ungroup(laneCounts.toMap(name)) }
 
       // Verify that the output data is the same as the input data
       postStream.asList.lazyZip(dataOut).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>
@@ -168,15 +168,15 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "use the test hardness" in {
-    val laneCounts = SeqMap(
-      "posts" -> 1,
-      "post_titles" -> 4,
-      "post_contents" -> 4,
-      "post_author_username" -> 4,
-      "post_tags" -> 4,
-      "post_comments" -> 1,
-      "post_comment_author_username" -> 4,
-      "post_comment_content" -> 4,
+    val laneCounts = PostStreamsSpecify(
+      posts = 1,
+      post_titles = 4,
+      post_contents = 4,
+      post_author_username = 4,
+      post_tags = 4,
+      post_comments = 1,
+      post_comment_author_username = 4,
+      post_comment_content = 4,
     )
 
     val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
@@ -185,7 +185,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
     // Create a map of input streams that have their packets grouped by lane count
     val inputStreams: SeqMap[String, TydiBinaryStream] = SeqMap.from(
       postStream.asList.lazyZip(postStream.names).lazyZip(bundle.asList).map { case (stream, name, axi) =>
-        val laneCount = laneCounts(name)
+        val laneCount = laneCounts.toMap(name)
         val blobWidth = axi.bits.getWidth
         (name -> stream.group(laneCount, blobWidth / laneCount))
       }
@@ -213,7 +213,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         })
       }).toList
 
-      val dataOut = dataOutRaw.zip(postStream.names).map { case (stream, name) => stream.ungroup(laneCounts(name)) }
+      val dataOut = dataOutRaw.zip(postStream.names).map { case (stream, name) => stream.ungroup(laneCounts.toMap(name)) }
 
       // Verify that the output data is the same as the input data
       postStream.asList.lazyZip(dataOut).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>

@@ -7,15 +7,15 @@ import nl.tudelft.tydi_chisel.{BitsEl, PhysicalStream, TydiEl, TydiModule}
 import scala.collection.immutable.SeqMap
 
 class PostPassthroughSingleLane extends TydiModule {
-  private val laneCounts = SeqMap(
-    "posts" -> 1,
-    "post_titles" -> 1,
-    "post_contents" -> 1,
-    "post_author_username" -> 1,
-    "post_tags" -> 1,
-    "post_comments" -> 1,
-    "post_comment_author_username" -> 1,
-    "post_comment_content" -> 1,
+  private val laneCounts = PostStreamsSpecify(
+    posts = 1,
+    post_titles = 1,
+    post_contents = 1,
+    post_author_username = 4,
+    post_tags = 1,
+    post_comments = 1,
+    post_comment_author_username = 1,
+    post_comment_content = 1,
   )
 
   val in: PostAxiBundle = IO(Flipped(new PostAxiBundle(laneCounts)))
