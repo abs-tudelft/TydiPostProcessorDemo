@@ -1,15 +1,15 @@
 package nl.tudelft.post_processor
 
-import TydiPayloadKit.{FromTydiBinary, TydiBinary, TydiBinaryStream, TydiStream}
+import PostTestUtils._
+import general.TydiPassthroughSingleLane
+
 import TydiPayloadKit.FromTydiBinary._
 import TydiPayloadKit.CustomBinaryConversions._
+import TydiPayloadKit.{TydiBinary, TydiBinaryStream, TydiStream}
 import chisel3._
 import chiseltest._
-import org.scalatest.flatspec.AnyFlatSpec
-import PostTestUtils._
-
-import chisel3.util.DecoupledIO
 import nl.tudelft.tydi_chisel.BitsEl
+import org.scalatest.flatspec.AnyFlatSpec
 
 class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
   behavior of "passthrough"

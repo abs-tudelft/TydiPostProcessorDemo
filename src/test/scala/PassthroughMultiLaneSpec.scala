@@ -1,8 +1,10 @@
 package nl.tudelft.post_processor
 
 import PostTestUtils._
+import general.{TestHarness, TydiPassthroughMultiLane}
 
 import TydiPayloadKit.FromTydiBinary._
+import TydiPayloadKit.CustomBinaryConversions._
 import TydiPayloadKit.{TydiBinary, TydiBinaryStream, TydiPacket, TydiStream}
 import chisel3._
 import chiseltest._

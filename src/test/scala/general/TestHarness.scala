@@ -1,9 +1,9 @@
 package nl.tudelft.post_processor
+package general
 
 import TydiPayloadKit.TydiBinaryStream
 import chisel3._
 import chisel3.util._
-import PostTestUtils._
 
 import scala.collection.immutable.SeqMap
 

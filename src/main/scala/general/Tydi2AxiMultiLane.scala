@@ -1,4 +1,5 @@
 package nl.tudelft.post_processor
+package general
 
 import chisel3._
 import chisel3.util._

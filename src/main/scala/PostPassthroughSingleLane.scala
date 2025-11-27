@@ -1,10 +1,9 @@
 package nl.tudelft.post_processor
 
-import chisel3._
-import chisel3.util.DecoupledIO
-import nl.tudelft.tydi_chisel.{BitsEl, PhysicalStream, TydiEl, TydiModule}
+import general.TydiPassthroughSingleLane
 
-import scala.collection.immutable.SeqMap
+import chisel3._
+import nl.tudelft.tydi_chisel.{TydiEl, TydiModule}
 
 class PostPassthroughSingleLane extends TydiModule {
   private val laneCounts = PostStreamsSpecify(
