@@ -12,7 +12,7 @@ import nl.tudelft.tydi_chisel.{PhysicalStream, TydiEl, TydiModule}
  * @param width The width of the AXI-stream.
  * @tparam T The type of the Tydi stream.
  */
-class TydiPassthroughMultiLane[T <: TydiEl](ioType: T, d: Int, n: Int, width: Int) extends TydiModule {
+class TydiPassthroughMultiLane[T <: TydiEl](ioType: T, d: Int, n: Int, width: Int) extends TydiModule with SimpleTypedIO[DecoupledIO[UInt], DecoupledIO[UInt]] {
   private val axiWidth = width * n
   val out: DecoupledIO[UInt] = IO(DecoupledIO(UInt(axiWidth.W)))
   val in: DecoupledIO[UInt] = IO(Flipped(DecoupledIO(UInt(axiWidth.W))))
