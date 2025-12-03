@@ -40,10 +40,11 @@ class PostStreamGroup extends Group {
 }
 
 class PostMetadata extends Group {
+  // Todo investigate binary conversions with unaligned sizes
   val interpunctions: UInt = UInt(8.W)
-  val uppercase: UInt = UInt(10.W)
-  val lowercase: UInt = UInt(10.W)
-  val spaces: UInt = UInt(10.W)
+  val uppercase: UInt = UInt(16.W)
+  val lowercase: UInt = UInt(16.W)
+  val spaces: UInt = UInt(16.W)
 }
 
 class PostWithMetadata extends PostStreamGroup {

@@ -29,7 +29,7 @@ object PostTestUtils {
                    comments: List[Comment]
                  )
 
-  case class PostMetadata(interpunctions: Int, uppercase: Int, lowercase: Int, spaces: Int)
+  case class PostMetadata(interpunctions: Byte, uppercase: Short, lowercase: Short, spaces: Short)
 
   case class PostWithMetadata(
                                postId: Int,

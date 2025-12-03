@@ -23,7 +23,7 @@ class PostProcessorMultiLane(laneCounts: InputStreamsAsFields[Int]) extends Tydi
   private val postStream = Wire(PhysicalStream(new PostStreamGroup, 1, 1, 1))
   private val postWithMetadataStream = Wire(PhysicalStream(new PostWithMetadata, 1, 1, 1))
   private val inConverter = Module(new Axi2TydiMultiLane(in.posts.getWidth, postStream))
-  private val outConverter = Module(new Tydi2AxiMultiLane(in.posts.getWidth, postWithMetadataStream))
+  private val outConverter = Module(new Tydi2AxiMultiLane(out.posts.getWidth, postWithMetadataStream))
   inConverter.input <> in.posts
   postStream := inConverter.output
   metadataAdder.in := postStream
