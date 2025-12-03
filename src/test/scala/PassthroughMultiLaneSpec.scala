@@ -118,7 +118,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "pass through all streams" in {
-    val laneCounts = PostStreamsSpecify(
+    val laneCounts = InputStreamsSpecify(
       posts = 1,
       post_titles = 4,
       post_contents = 4,
@@ -170,7 +170,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   it should "use the test hardness" in {
-    val laneCounts = PostStreamsSpecify(
+    val laneCounts = InputStreamsSpecify(
       posts = 1,
       post_titles = 4,
       post_contents = 4,
@@ -182,7 +182,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
     )
 
     val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
-    val bundle = new PostAxiBundle(laneCounts)
+    val bundle = new InputAxiBundle(laneCounts)
 
     // Create a map of input streams that have their packets grouped by lane count
     val inputStreams: SeqMap[String, TydiBinaryStream] = SeqMap.from(

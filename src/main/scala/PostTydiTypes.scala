@@ -39,7 +39,20 @@ class PostStreamGroup extends Group {
   val comments = new CommentsStream
 }
 
+class PostMetadata extends Group {
+  val interpunctions: UInt = UInt(8.W)
+  val uppercase: UInt = UInt(10.W)
+  val lowercase: UInt = UInt(10.W)
+  val spaces: UInt = UInt(10.W)
+}
+
+class PostWithMetadata extends PostStreamGroup {
+  val metadata = new PostMetadata
+}
+
 class PostStream extends PhysicalStreamDetailed(e=new PostStreamGroup, c=8, d=1, n=1, r=false)
+
+class PostWithMetadataStream extends PhysicalStreamDetailed(e=new PostWithMetadata, c=8, d=1, n=1, r=false)
 
 class RootStreamlet extends TydiModule {
   private val outputStream = new PostStream

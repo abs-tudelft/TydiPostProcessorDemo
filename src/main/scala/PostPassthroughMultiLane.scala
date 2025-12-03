@@ -5,11 +5,11 @@ import general.{SimpleTypedIO, TydiPassthroughMultiLane}
 import chisel3._
 import nl.tudelft.tydi_chisel.{TydiEl, TydiModule}
 
-class PostPassthroughMultiLane(laneCounts: PostStreamsAsFields[Int]) extends TydiModule with SimpleTypedIO[PostAxiBundle, PostAxiBundle] {
-  val in: PostAxiBundle = IO(Flipped(new PostAxiBundle(laneCounts)))
-  val out: PostAxiBundle = IO(new PostAxiBundle(laneCounts))
+class PostPassthroughMultiLane(laneCounts: InputStreamsAsFields[Int]) extends TydiModule with SimpleTypedIO[InputAxiBundle, InputAxiBundle] {
+  val in: InputAxiBundle = IO(Flipped(new InputAxiBundle(laneCounts)))
+  val out: InputAxiBundle = IO(new InputAxiBundle(laneCounts))
 
-  private val physicalStreams = new PostTydiPhysicalBundle
+  private val physicalStreams = new InputTydiPhysicalBundle
 
   private val laneCountValues = laneCounts.toMap.values.toSeq
 

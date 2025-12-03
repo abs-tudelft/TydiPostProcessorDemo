@@ -2,7 +2,7 @@ package nl.tudelft.post_processor
 
 import scala.collection.immutable.SeqMap
 
-trait PostStreamsAsFields[T] {
+trait InputStreamsAsFields[T] {
   val posts: T
   val post_titles: T
   val post_contents: T

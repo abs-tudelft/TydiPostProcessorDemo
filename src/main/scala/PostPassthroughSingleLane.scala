@@ -6,7 +6,7 @@ import chisel3._
 import nl.tudelft.tydi_chisel.{TydiEl, TydiModule}
 
 class PostPassthroughSingleLane extends TydiModule {
-  private val laneCounts = PostStreamsSpecify(
+  private val laneCounts = InputStreamsSpecify(
     posts = 1,
     post_titles = 1,
     post_contents = 1,
@@ -17,10 +17,10 @@ class PostPassthroughSingleLane extends TydiModule {
     post_comment_content = 1,
   )
 
-  val in: PostAxiBundle = IO(Flipped(new PostAxiBundle(laneCounts)))
-  val out: PostAxiBundle = IO(new PostAxiBundle(laneCounts))
+  val in: InputAxiBundle = IO(Flipped(new InputAxiBundle(laneCounts)))
+  val out: InputAxiBundle = IO(new InputAxiBundle(laneCounts))
 
-  private val physicalStreams = new PostTydiPhysicalBundle
+  private val physicalStreams = new InputTydiPhysicalBundle
 
   private val passthroughs: Seq[TydiPassthroughSingleLane[TydiEl]] = in.asList.zip(physicalStreams.asList).map { case (axi, tydi) =>
     Module(new TydiPassthroughSingleLane(tydi.elementType, tydi.d, axi.bits.getWidth.W))

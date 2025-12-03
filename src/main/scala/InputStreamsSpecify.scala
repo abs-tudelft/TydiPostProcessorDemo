@@ -1,6 +1,6 @@
 package nl.tudelft.post_processor
 
-case class PostStreamsSpecify[T](
+case class InputStreamsSpecify[T](
                                   posts: T,
                                   post_titles: T,
                                   post_contents: T,
@@ -9,4 +9,4 @@ case class PostStreamsSpecify[T](
                                   post_comments: T,
                                   post_comment_author_username: T,
                                   post_comment_content: T,
-                                ) extends PostStreamsAsFields[T]
+                                ) extends InputStreamsAsFields[T]

@@ -3,9 +3,9 @@ package nl.tudelft.post_processor
 import chisel3._
 import nl.tudelft.tydi_chisel._
 
-class PostTydiPhysicalBundle extends Bundle with PostStreamsAsFields[PhysicalStream] {
+class OutputTydiPhysicalBundle extends Bundle with InputStreamsAsFields[PhysicalStream] {
   private val char = BitsEl(8.W)
-  val posts: PhysicalStream = PhysicalStream(new PostStreamGroup, 1, 1, 1)
+  val posts: PhysicalStream = PhysicalStream(new PostWithMetadata, 1, 1, 1)
   val post_titles: PhysicalStream = PhysicalStream(char, 1, 2, 1)
   val post_contents: PhysicalStream = PhysicalStream(char, 1, 2, 1)
   val post_author_username: PhysicalStream = PhysicalStream(char, 1, 2, 1)

@@ -38,7 +38,7 @@ object PostTestUtils {
                                    post_comment_author_username: TydiStream[Char],
                                    post_comment_content: TydiStream[Char],
                                    post_comments: TydiStream[Comment]
-                                 ) extends PostStreamsAsFields[TydiStream[_]] {
+                                 ) extends InputStreamsAsFields[TydiStream[_]] {
     def reverse(): Seq[Post] = {
       val comments_recreated = post_comments
         .injectString((c: Comment, s) => c.copy(author = c.author.copy(username = s)), post_comment_author_username)
@@ -87,7 +87,7 @@ object PostTestUtils {
                                     post_comments: TydiBinaryStream,
                                     post_comment_author_username: TydiBinaryStream,
                                     post_comment_content: TydiBinaryStream,
-                                  ) extends PostStreamsAsFields[TydiBinaryStream] {
+                                  ) extends InputStreamsAsFields[TydiBinaryStream] {
     def reverse(): PhysicalStreamsTyped = {
       new PhysicalStreamsTyped(
         posts = TydiStream.fromBinaryBlobs(posts, 1),
