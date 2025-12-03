@@ -1,4 +1,5 @@
 package nl.tudelft.post_processor
+package passthrough
 
 import general.{SimpleTypedIO, TydiPassthroughMultiLane}
 

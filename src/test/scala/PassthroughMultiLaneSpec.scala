@@ -8,6 +8,7 @@ import TydiPayloadKit.CustomBinaryConversions._
 import TydiPayloadKit.{TydiBinary, TydiBinaryStream, TydiPacket, TydiStream}
 import chisel3._
 import chiseltest._
+import nl.tudelft.post_processor.passthrough.PostPassthroughMultiLane
 import nl.tudelft.tydi_chisel.BitsEl
 import org.scalatest.flatspec.AnyFlatSpec
 
