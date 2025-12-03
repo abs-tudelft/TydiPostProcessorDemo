@@ -65,7 +65,7 @@ class ProcessorSpec extends AnyFlatSpec with ChiselScalatestTester {
       val dataOut = dataOutRaw.zip(postStream.names).map { case (stream, name) => stream.ungroup(laneCounts.toMap(name)) }
 
       // Verify that the output data is the same as the input data
-      postStream.asList.lazyZip(dataOut).lazyZip(postStream.names).foreach { case (inStream, outStream, name) =>
+      postStream.asList.lazyZip(dataOut).lazyZip(postStream.names).tail.foreach { case (inStream, outStream, name) =>
         inStream.zip(outStream).zipWithIndex.foreach { case ((p, o), i) =>
           assert(p.data == o.data, s"Unequal data at index $i in stream $name: ${p.data} != ${o.data}")
         }

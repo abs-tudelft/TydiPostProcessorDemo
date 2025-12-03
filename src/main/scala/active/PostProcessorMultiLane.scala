@@ -27,14 +27,15 @@ class PostProcessorMultiLane(laneCounts: InputStreamsAsFields[Int]) extends Tydi
   inConverter.input <> in.posts
   postStream := inConverter.output
   metadataAdder.in := postStream
-  outConverter.input := metadataAdder.out
+  postWithMetadataStream := metadataAdder.out
+  outConverter.input := postWithMetadataStream
   out.posts <> outConverter.output
 
-  in.asList.zip(passthroughs).foreach { case (io, module) =>
+  in.asList.tail.zip(passthroughs).foreach { case (io, module) =>
     module.in <> io
   }
 
-  out.asList.zip(passthroughs).foreach { case (io, module) =>
+  out.asList.tail.zip(passthroughs).foreach { case (io, module) =>
     io <> module.out
   }
 }
