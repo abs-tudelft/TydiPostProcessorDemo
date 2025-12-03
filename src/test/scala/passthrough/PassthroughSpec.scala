@@ -1,4 +1,5 @@
 package nl.tudelft.post_processor
+package passthrough
 
 import PostTestUtils._
 import general.TydiPassthroughSingleLane
@@ -8,7 +9,6 @@ import TydiPayloadKit.CustomBinaryConversions._
 import TydiPayloadKit.{TydiBinary, TydiBinaryStream, TydiStream}
 import chisel3._
 import chiseltest._
-import nl.tudelft.post_processor.passthrough.PostPassthroughSingleLane
 import nl.tudelft.tydi_chisel.BitsEl
 import org.scalatest.flatspec.AnyFlatSpec
 
