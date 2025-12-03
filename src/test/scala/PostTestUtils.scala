@@ -29,7 +29,23 @@ object PostTestUtils {
                    comments: List[Comment]
                  )
 
-  case class PhysicalStreamsTyped(
+  case class PostMetadata(interpunctions: Int, uppercase: Int, lowercase: Int, spaces: Int)
+
+  case class PostWithMetadata(
+                               postId: Int,
+                               title: String,
+                               content: String,
+                               author: Author,
+                               createdAt: Instant,
+                               updatedAt: Instant,
+                               tags: List[String],
+                               likes: Int,
+                               shares: Int,
+                               comments: List[Comment],
+                               metadata: PostMetadata
+                             )
+
+  case class InputPhysicalStreamsTyped(
                                    posts: TydiStream[Post],
                                    post_titles: TydiStream[Char],
                                    post_contents: TydiStream[Char],
@@ -56,8 +72,8 @@ object PostTestUtils {
     }
   }
 
-  object PhysicalStreamsTyped {
-    def apply(posts: Seq[Post]): PhysicalStreamsTyped = {
+  object InputPhysicalStreamsTyped {
+    def apply(posts: Seq[Post]): InputPhysicalStreamsTyped = {
       val posts_tydi = TydiStream.fromSeq(posts);
       val titles_tydi = posts_tydi.drill(_.title);
       val contents_tydi = posts_tydi.drill(_.content);
@@ -65,7 +81,7 @@ object PostTestUtils {
       val comments_tydi = posts_tydi.drill(_.comments);
       val comment_author_tydi = comments_tydi.drill(_.author.username);
 
-      new PhysicalStreamsTyped(
+      new InputPhysicalStreamsTyped(
         post_titles = titles_tydi,
         post_contents = contents_tydi,
         post_author_username = posts_tydi.drill(_.author.username),
@@ -78,7 +94,7 @@ object PostTestUtils {
     }
   }
 
-  case class PhysicalStreamsBinary(
+  case class InputPhysicalStreamsBinary(
                                     posts: TydiBinaryStream,
                                     post_titles: TydiBinaryStream,
                                     post_contents: TydiBinaryStream,
@@ -88,8 +104,8 @@ object PostTestUtils {
                                     post_comment_author_username: TydiBinaryStream,
                                     post_comment_content: TydiBinaryStream,
                                   ) extends InputStreamsAsFields[TydiBinaryStream] {
-    def reverse(): PhysicalStreamsTyped = {
-      new PhysicalStreamsTyped(
+    def reverse(): InputPhysicalStreamsTyped = {
+      new InputPhysicalStreamsTyped(
         posts = TydiStream.fromBinaryBlobs(posts, 1),
         post_titles = TydiStream.fromBinaryBlobs(post_titles, 2),
         post_contents = TydiStream.fromBinaryBlobs(post_contents, 2),
@@ -110,9 +126,105 @@ object PostTestUtils {
     val asTuplesWithNames: List[(String, TydiBinaryStream)] = names.zip(asList)
   }
 
-  object PhysicalStreamsBinary {
-    def apply(posts: PhysicalStreamsTyped): PhysicalStreamsBinary = {
-      new PhysicalStreamsBinary(
+  object InputPhysicalStreamsBinary {
+    def apply(posts: InputPhysicalStreamsTyped): InputPhysicalStreamsBinary = {
+      new InputPhysicalStreamsBinary(
+        posts = posts.posts.toBinaryBlobs(),
+        post_titles = posts.post_titles.toBinaryBlobs(),
+        post_contents = posts.post_contents.toBinaryBlobs(),
+        post_author_username = posts.post_author_username.toBinaryBlobs(),
+        post_tags = posts.post_tags.toBinaryBlobs(),
+        post_comments = posts.post_comments.toBinaryBlobs(),
+        post_comment_author_username = posts.post_comment_author_username.toBinaryBlobs(),
+        post_comment_content = posts.post_comment_content.toBinaryBlobs(),
+      )
+    }
+  }
+
+  case class OutputPhysicalStreamsTyped(
+                                   posts: TydiStream[PostWithMetadata],
+                                   post_titles: TydiStream[Char],
+                                   post_contents: TydiStream[Char],
+                                   post_author_username: TydiStream[Char],
+                                   post_tags: TydiStream[Char],
+                                   post_comment_author_username: TydiStream[Char],
+                                   post_comment_content: TydiStream[Char],
+                                   post_comments: TydiStream[Comment]
+                                 ) extends InputStreamsAsFields[TydiStream[_]] {
+    def reverse(): Seq[PostWithMetadata] = {
+      val comments_recreated = post_comments
+        .injectString((c: Comment, s) => c.copy(author = c.author.copy(username = s)), post_comment_author_username)
+        .injectString((c: Comment, s) => c.copy(content = s), post_comment_content)
+
+      val tags_recreated = post_tags.unpackToStrings()
+      val posts_recreated = posts
+        .inject[Comment]((p: PostWithMetadata, s) => p.copy(comments = s.toList), comments_recreated)
+        .inject[String]((p: PostWithMetadata, s) => p.copy(tags = s.toList), tags_recreated)
+        .injectString((p: PostWithMetadata, s) => p.copy(title = s), post_titles)
+        .injectString((p: PostWithMetadata, s) => p.copy(content = s), post_contents)
+        .injectString((p: PostWithMetadata, s) => p.copy(author = p.author.copy(username = s)), post_author_username)
+
+      posts_recreated.toSeq
+    }
+  }
+
+  object OutputPhysicalStreamsTyped {
+    def apply(posts: Seq[PostWithMetadata]): OutputPhysicalStreamsTyped = {
+      val posts_tydi = TydiStream.fromSeq(posts);
+      val titles_tydi = posts_tydi.drill(_.title);
+      val contents_tydi = posts_tydi.drill(_.content);
+      val tags_tydi = posts_tydi.drill(_.tags).drill(x => x);
+      val comments_tydi = posts_tydi.drill(_.comments);
+      val comment_author_tydi = comments_tydi.drill(_.author.username);
+
+      new OutputPhysicalStreamsTyped(
+        post_titles = titles_tydi,
+        post_contents = contents_tydi,
+        post_author_username = posts_tydi.drill(_.author.username),
+        post_tags = tags_tydi,
+        post_comment_author_username = comment_author_tydi,
+        post_comment_content = comments_tydi.drill(_.content),
+        post_comments = comments_tydi,
+        posts = posts_tydi
+      )
+    }
+  }
+
+  case class OutputPhysicalStreamsBinary(
+                                    posts: TydiBinaryStream,
+                                    post_titles: TydiBinaryStream,
+                                    post_contents: TydiBinaryStream,
+                                    post_author_username: TydiBinaryStream,
+                                    post_tags: TydiBinaryStream,
+                                    post_comments: TydiBinaryStream,
+                                    post_comment_author_username: TydiBinaryStream,
+                                    post_comment_content: TydiBinaryStream,
+                                  ) extends InputStreamsAsFields[TydiBinaryStream] {
+    def reverse(): OutputPhysicalStreamsTyped = {
+      new OutputPhysicalStreamsTyped(
+        posts = TydiStream.fromBinaryBlobs(posts, 1),
+        post_titles = TydiStream.fromBinaryBlobs(post_titles, 2),
+        post_contents = TydiStream.fromBinaryBlobs(post_contents, 2),
+        post_author_username = TydiStream.fromBinaryBlobs(post_author_username, 2),
+        post_tags = TydiStream.fromBinaryBlobs(post_tags, 3),
+        post_comments = TydiStream.fromBinaryBlobs(post_comments, 2),
+        post_comment_author_username = TydiStream.fromBinaryBlobs(post_comment_author_username, 3),
+        post_comment_content = TydiStream.fromBinaryBlobs(post_comment_content, 3),
+      )
+    }
+
+    val asList: List[TydiBinaryStream] = {
+      this.productIterator.toList.asInstanceOf[List[TydiBinaryStream]]
+    }
+
+    val names: List[String] = List("posts", "post_titles", "post_contents", "post_author_username", "post_tags", "post_comments", "post_comment_author_username", "post_comment_content")
+
+    val asTuplesWithNames: List[(String, TydiBinaryStream)] = names.zip(asList)
+  }
+
+  object OutputPhysicalStreamsBinary {
+    def apply(posts: OutputPhysicalStreamsTyped): OutputPhysicalStreamsBinary = {
+      new OutputPhysicalStreamsBinary(
         posts = posts.posts.toBinaryBlobs(),
         post_titles = posts.post_titles.toBinaryBlobs(),
         post_contents = posts.post_contents.toBinaryBlobs(),
@@ -179,13 +291,13 @@ object PostTestUtils {
     posts
   }
 
-  def getPhysicalStreams: PhysicalStreamsTyped = {
+  def getPhysicalStreams: InputPhysicalStreamsTyped = {
     val posts = getPosts
-    PhysicalStreamsTyped(posts)
+    InputPhysicalStreamsTyped(posts)
   }
 
-  def getPhysicalStreamsBinary: PhysicalStreamsBinary = {
+  def getPhysicalStreamsBinary: InputPhysicalStreamsBinary = {
     val posts = getPhysicalStreams
-    PhysicalStreamsBinary(posts)
+    InputPhysicalStreamsBinary(posts)
   }
 }

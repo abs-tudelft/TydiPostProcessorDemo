@@ -137,7 +137,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         s.ready.poke(true.B)
       })
 
-      val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
+      val postStream: InputPhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
       val dataStreams = postStream.asList
 
       val dataOutRaw = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
@@ -162,7 +162,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         }
       }
 
-      val outStream = PhysicalStreamsBinary(dataOut(0), dataOut(1), dataOut(2), dataOut(3), dataOut(4), dataOut(5), dataOut(6), dataOut(7))
+      val outStream = InputPhysicalStreamsBinary(dataOut(0), dataOut(1), dataOut(2), dataOut(3), dataOut(4), dataOut(5), dataOut(6), dataOut(7))
       val reconstructed1 = outStream.reverse()
       val reconstructed2 = reconstructed1.reverse()
       printPosts(reconstructed2)
@@ -181,7 +181,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
       post_comment_content = 4,
     )
 
-    val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
+    val postStream: InputPhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
     val bundle = new InputAxiBundle(laneCounts)
 
     // Create a map of input streams that have their packets grouped by lane count
@@ -224,7 +224,7 @@ class PassthroughMultiLaneSpec extends AnyFlatSpec with ChiselScalatestTester {
         }
       }
 
-      val outStream = PhysicalStreamsBinary(dataOut(0), dataOut(1), dataOut(2), dataOut(3), dataOut(4), dataOut(5), dataOut(6), dataOut(7))
+      val outStream = InputPhysicalStreamsBinary(dataOut(0), dataOut(1), dataOut(2), dataOut(3), dataOut(4), dataOut(5), dataOut(6), dataOut(7))
       val reconstructed1 = outStream.reverse()
       val reconstructed2 = reconstructed1.reverse()
       printPosts(reconstructed2)

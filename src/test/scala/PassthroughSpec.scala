@@ -78,7 +78,7 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
         s.ready.poke(true.B)
       })
 
-      val postStream: PhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
+      val postStream: InputPhysicalStreamsBinary = PostTestUtils.getPhysicalStreamsBinary
       val dataStreams = postStream.asList
 
       val passedData = c.in.asList.lazyZip(c.out.asList).lazyZip(dataStreams).lazyZip(postStream.names).map {
@@ -100,7 +100,7 @@ class PassthroughSpec extends AnyFlatSpec with ChiselScalatestTester {
         }
       }
 
-      val outStream = PhysicalStreamsBinary(passedData(0), passedData(1), passedData(2), passedData(3), passedData(4), passedData(5), passedData(6), passedData(7))
+      val outStream = InputPhysicalStreamsBinary(passedData(0), passedData(1), passedData(2), passedData(3), passedData(4), passedData(5), passedData(6), passedData(7))
       val reconstructed1 = outStream.reverse()
       val reconstructed2 = reconstructed1.reverse()
       printPosts(reconstructed2)
