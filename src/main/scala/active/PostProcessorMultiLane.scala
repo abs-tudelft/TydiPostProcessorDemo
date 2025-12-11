@@ -8,9 +8,9 @@ import nl.tudelft.tydi_chisel._
 
 class PostProcessorMultiLane(laneCounts: InputStreamsAsFields[Int]) extends TydiModule with SimpleTypedIO[InputAxiBundle, OutputAxiBundle] {
   val in: InputAxiBundle = IO(Flipped(new InputAxiBundle(laneCounts)))
-  private val inTydi: InputTydiPhysicalBundle = Wire(new InputTydiPhysicalBundle)
+  private val inTydi: InputTydiPhysicalBundle = Wire(new InputTydiPhysicalBundle(laneCounts))
   val out: OutputAxiBundle = IO(new OutputAxiBundle(laneCounts))
-  private val outTydi: OutputTydiPhysicalBundle = Wire(new OutputTydiPhysicalBundle)
+  private val outTydi: OutputTydiPhysicalBundle = Wire(new OutputTydiPhysicalBundle(laneCounts))
 
   // Create converters from AXI to Tydi and connect signals.
   private val inConverters: Seq[Axi2TydiMultiLane] = in.asList.zip(inTydi.asList).map { case (axi, tydi) =>

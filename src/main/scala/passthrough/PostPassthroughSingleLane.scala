@@ -21,7 +21,7 @@ class PostPassthroughSingleLane extends TydiModule {
   val in: InputAxiBundle = IO(Flipped(new InputAxiBundle(laneCounts)))
   val out: InputAxiBundle = IO(new InputAxiBundle(laneCounts))
 
-  private val physicalStreams = new InputTydiPhysicalBundle
+  private val physicalStreams = new InputTydiPhysicalBundle(laneCounts)
 
   private val passthroughs: Seq[TydiPassthroughSingleLane[TydiEl]] = in.asList.zip(physicalStreams.asList).map { case (axi, tydi) =>
     Module(new TydiPassthroughSingleLane(tydi.elementType, tydi.d, axi.bits.getWidth.W))

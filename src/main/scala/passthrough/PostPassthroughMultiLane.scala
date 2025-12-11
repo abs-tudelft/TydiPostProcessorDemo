@@ -10,7 +10,7 @@ class PostPassthroughMultiLane(laneCounts: InputStreamsAsFields[Int]) extends Ty
   val in: InputAxiBundle = IO(Flipped(new InputAxiBundle(laneCounts)))
   val out: InputAxiBundle = IO(new InputAxiBundle(laneCounts))
 
-  private val physicalStreams = new InputTydiPhysicalBundle
+  private val physicalStreams = new InputTydiPhysicalBundle(laneCounts)
 
   private val laneCountValues = laneCounts.toMap.values.toSeq
 
