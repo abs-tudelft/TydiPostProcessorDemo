@@ -6,7 +6,7 @@ import chisel3.util.DecoupledIO
 class OutputAxiBundle(laneCounts: InputStreamsAsFields[Int]) extends Bundle with InputStreamsAsFields[DecoupledIO[UInt]] {
   private val charSize = 16 // Rounding up charSize+1+d
 
-  val posts: DecoupledIO[UInt] = DecoupledIO(UInt((320 * laneCounts.posts).W))
+  val posts: DecoupledIO[UInt] = DecoupledIO(UInt((328 * laneCounts.posts).W))
   val post_titles: DecoupledIO[UInt] = DecoupledIO(UInt((charSize * laneCounts.post_titles).W))
   val post_contents: DecoupledIO[UInt] = DecoupledIO(UInt((charSize * laneCounts.post_contents).W))
   val post_author_username: DecoupledIO[UInt] = DecoupledIO(UInt((charSize * laneCounts.post_author_username).W))

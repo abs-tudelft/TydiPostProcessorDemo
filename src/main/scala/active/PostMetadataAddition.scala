@@ -14,6 +14,7 @@ class PostMetadataAddition extends SubProcessorBase(new PostStreamGroup, new Pos
     outLane.likes := inLane.likes
     outLane.shares := inLane.shares
 
+    outLane.metadata.words := 0.U
     outLane.metadata.interpunctions := 1.U
     outLane.metadata.lowercase := 2.U
     outLane.metadata.uppercase := 3.U
